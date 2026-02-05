@@ -38,7 +38,7 @@ TOOLS = [
 ]
 
 def proccess_ai_response(message: ChatCompletionMessage):
-    if message.tool_calls > 0:
+    if message.tool_calls:
         messages.append({
             "role": "assistant",
             "content": message.content or "",
@@ -46,7 +46,7 @@ def proccess_ai_response(message: ChatCompletionMessage):
                 "id": tool_call.id,
                 "type": "function",
                 "function": {
-                    "name": tool_call.function,
+                    "name": tool_call.function.name,
                     "arguments": tool_call.function.arguments,
                 }
             } for tool_call in message.tool_calls]
@@ -66,12 +66,22 @@ def proccess_ai_response(message: ChatCompletionMessage):
             function_to_run = FUNCTION_MAP.get(function_name)
             result = function_to_run(**arguments)
 
+            print(f"Ran {function_name} with arguments: {arguments} for result: {result}")
+
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
                 "name": function_name,
                 "content": result,
             })
+
+        call_ai()
+    else:
+        messages.append({
+            "role": "assistant",
+            "content": message.content or "",
+        })
+        print(f"AI: {message.content}")
 
 def call_ai():
     response = client.chat.completions.create(
@@ -85,11 +95,10 @@ def call_ai():
         "role": "assistant",
         'content': message,
     })
-    print(f"AI: {message}")
 
 
 while True:
-    message = input("Send a message to LLM")
+    message = input("Send a message to LLM \n")
     if message == "q":
         break
     else:
