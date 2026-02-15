@@ -42,15 +42,32 @@ class JobHunterCrew:
 
     @task
     def resume_rewriting_task(self) -> Task:
-        return Task(config=self.tasks_config['resume_rewriting_task'])
+        return Task(
+            config=self.tasks_config['resume_rewriting_task'],
+            context=[
+                self.job_selection_task(),
+            ]
+        )
 
     @task
     def company_research_task(self) -> Task:
-        return Task(config=self.tasks_config['company_research_task'])
+        return Task(
+            config=self.tasks_config['company_research_task'],
+            context=[
+                self.job_selection_task(),
+            ]
+        )
 
     @task
     def interview_prep_task(self) -> Task:
-        return Task(config=self.tasks_config['interview_prep_task'])
+        return Task(
+            config=self.tasks_config['interview_prep_task'],
+            context=[
+                self.job_selection_task(),
+                self.resume_rewriting_task(),
+                self.company_research_task(),
+            ]
+        )
 
     @crew
     def crew(self) -> Crew:
@@ -62,18 +79,4 @@ class JobHunterCrew:
             verbose=True,
         )
 
-def main():
-    # Replace with your inputs, ensuring they match what your tasks expect
-    inputs = {
-        'position': 'Senior Software Engineer',
-        'level': 'Senior',
-        'location': 'San Francisco, CA'
-    }
-    
-    try:
-        JobHunterCrew().crew().kickoff(inputs=inputs)
-    except Exception as e:
-        print(f"An error occurred while running the crew: {e}", file=sys.stderr)
-
-if __name__ == "__main__":
-    main()
+JobHunterCrew().crew().kickoff()
